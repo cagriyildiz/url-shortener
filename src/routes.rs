@@ -1,7 +1,8 @@
-use axum::extract::State;
+use axum::body::Body;
+use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use base64::Engine;
 use base64::engine::general_purpose;
 use rand::Rng;
@@ -53,4 +54,34 @@ pub async fn create_link(
     .map_err(internal_error)?;
 
     Ok(Json(new_link))
+}
+
+pub async fn redirect(
+    State(pool): State<PgPool>,
+    Path(requested_link): Path<String>,
+) -> Result<Response, (StatusCode, String)> {
+    let timeout = tokio::time::Duration::from_millis(300);
+
+    let link = tokio::time::timeout(
+        timeout,
+        sqlx::query_as!(
+            Link,
+            "select id, target_url from links where id = $1",
+            requested_link
+        )
+        .fetch_optional(&pool)
+    )
+    .await
+    .map_err(internal_error)?
+    .map_err(internal_error)?
+    .ok_or_else(|| "Link not found".to_string())
+    .map_err(|err| (StatusCode::NOT_FOUND, err))?;
+
+    Ok(
+        Response::builder()
+            .status(StatusCode::TEMPORARY_REDIRECT)
+            .header("Location", link.target_url)
+            .body(Body::empty())
+            .expect("Could not build response")
+    )
 }
