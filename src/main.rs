@@ -4,11 +4,11 @@ mod model;
 
 use std::error::Error;
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::{get, patch, post};
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
-use crate::routes::{create_link, health, redirect};
+use crate::routes::{create_link, health, redirect, update_link};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/create", post(create_link))
-        .route("/:id", get(redirect))
+        .route("/:id", patch(update_link).get(redirect))
         .route("/health", get(health))
         .with_state(db_pool);
 
