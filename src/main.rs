@@ -1,12 +1,14 @@
 mod routes;
+mod utils;
+mod model;
 
 use std::error::Error;
 use axum::Router;
-use axum::routing::get;
+use axum::routing::{get, post};
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
-use crate::routes::health;
+use crate::routes::{create_link, health};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -22,6 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Could not connect to the database");
 
     let app = Router::new()
+        .route("/create", post(create_link))
         .route("/health", get(health))
         .with_state(db_pool);
 
