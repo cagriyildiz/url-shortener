@@ -996,22 +996,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "link-shortener"
-version = "0.1.0"
-dependencies = [
- "axum",
- "base64 0.22.0",
- "dotenvy",
- "rand",
- "serde",
- "sqlx",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2240,6 +2224,22 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "url-shortener"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.0",
+ "dotenvy",
+ "rand",
+ "serde",
+ "sqlx",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
 ]
 
 [[package]]
