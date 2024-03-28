@@ -6,12 +6,10 @@ use axum::response::{IntoResponse, Response};
 use base64::Engine;
 use base64::engine::general_purpose;
 use rand::Rng;
-use sqlx::{Error, PgPool};
-use sqlx::postgres::PgQueryResult;
-use tokio::time::error::Elapsed;
+use sqlx::PgPool;
 use url::Url;
 use crate::utils::internal_error;
-use crate::model::{Link, LinkTarget};
+use crate::model::{CountedLinkStatistic, Link, LinkTarget};
 
 pub async fn health() -> impl IntoResponse {
     (StatusCode::OK, "Service is healthy")
@@ -158,4 +156,33 @@ pub async fn update_link(
     tracing::debug!("Updated link with id {}, now targeting {}", link_id, url);
 
     Ok(Json(updated_link))
+}
+
+pub async fn get_link_statistics(
+    State(pool): State<PgPool>,
+    Path(link_id): Path<String>,
+) -> Result<Json<Vec<CountedLinkStatistic>>, (StatusCode, String)> {
+    let timeout = tokio::time::Duration::from_millis(300);
+
+    let statistics = tokio::time::timeout(
+        timeout,
+        sqlx::query_as!(
+            CountedLinkStatistic,
+            r#"
+            select count(*) as count, referer, user_agent
+            from link_statistics
+            group by link_id, referer, user_agent
+            having link_id = $1
+            "#,
+            &link_id
+        )
+        .fetch_all(&pool)
+    )
+    .await
+    .map_err(internal_error)?
+    .map_err(internal_error)?;
+
+    tracing::debug!("Statistics for link with id {} requested", link_id);
+
+    Ok(Json(statistics))
 }

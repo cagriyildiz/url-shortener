@@ -8,11 +8,10 @@ use axum::routing::{get, patch, post};
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
-use tracing::log::LevelFilter;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use crate::routes::{create_link, health, redirect, update_link};
+use crate::routes::{create_link, get_link_statistics, health, redirect, update_link};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -39,6 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = Router::new()
         .route("/create", post(create_link))
+        .route("/:id/statistics", get(get_link_statistics))
         .route("/:id", patch(update_link).get(redirect))
         .route("/health", get(health))
         .with_state(db_pool);
