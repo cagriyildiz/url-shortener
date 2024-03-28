@@ -53,6 +53,8 @@ pub async fn create_link(
     .map_err(internal_error)?
     .map_err(internal_error)?;
 
+    tracing::debug!("Created new link with id {} targeting {}", new_link_id, url);
+
     Ok(Json(new_link))
 }
 
@@ -76,6 +78,8 @@ pub async fn redirect(
     .map_err(internal_error)?
     .ok_or_else(|| "Link not found".to_string())
     .map_err(|err| (StatusCode::NOT_FOUND, err))?;
+
+    tracing::debug!("Redirecting link id {} to {}", requested_link, link.target_url);
 
     Ok(
         Response::builder()
@@ -116,6 +120,8 @@ pub async fn update_link(
     .await
     .map_err(internal_error)?
     .map_err(internal_error)?;
+
+    tracing::debug!("Updated link with id {}, now targeting {}", link_id, url);
 
     Ok(Json(updated_link))
 }
